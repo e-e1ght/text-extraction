@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "AI 채팅 txt 추출기",
+  "version": "0.2.0",
+  "description": "AI 채팅 사이트의 대화 내역을 txt 파일로 저장합니다.",
+  "permissions": ["storage", "scripting"],
+  "host_permissions": [
+    "https://caveduck.io/*",
+    "https://*.caveduck.io/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "대화 추출 패널 열기"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://caveduck.io/*", "https://*.caveduck.io/*"],
+      "js": ["adapters/registry.js", "adapters/caveduck.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
