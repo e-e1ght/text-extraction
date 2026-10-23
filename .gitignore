@@ -3,3 +3,5 @@ Thumbs.db
 *.zip
 *.crx
 *.pem
+.preview/
+.claude/

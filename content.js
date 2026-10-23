@@ -50,54 +50,146 @@ function downloadText(text, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
+// 패널 글꼴: 프리젠테이션(Freesentation). Shadow DOM 안의 @font-face 는 적용되지 않아서
+// 파일을 직접 받아 document.fonts 에 넣는다 (사이트 CSP 와 상관없이 동작).
+const FONT_FAMILY = 'ChatExtractorPresentation';
+const FONT_BASE = 'https://cdn.jsdelivr.net/gh/projectnoonnu/2404@1.0/';
+const FONT_FILES = {
+  400: 'Freesentation-4Regular',
+  500: 'Freesentation-5Medium',
+  600: 'Freesentation-6SemiBold',
+  700: 'Freesentation-7Bold',
+};
+let fontsLoaded = false;
+
+function loadPanelFonts() {
+  if (fontsLoaded) return;
+  fontsLoaded = true;
+  for (const [weight, file] of Object.entries(FONT_FILES)) {
+    fetch(`${FONT_BASE}${file}.woff2`)
+      .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(res.status)))
+      .then((buf) => document.fonts.add(new FontFace(FONT_FAMILY, buf, { weight })))
+      .catch(() => {}); // 못 받으면 기본 글꼴로 보인다
+  }
+}
+
 const PANEL_CSS = `
   :host { all: initial; }
   .panel {
+    --bg: #fafbfe; --card: #ffffff; --line: #e2e7f0; --text: #1f2633; --muted: #7c8696;
+    --accent: #3b6ff0; --accent-2: #5aa7f5; --accent-soft: #eaf1fe;
+    --error: #d6455d; --error-soft: #fdecef; --ok: #3f9c76; --ok-soft: #e9f6f0;
     position: fixed; top: 16px; right: 16px; z-index: 2147483647;
-    width: 280px; box-sizing: border-box; padding: 14px;
-    font: 13px/1.5 system-ui, "Malgun Gothic", sans-serif; color: #222;
-    background: #fff; border: 1px solid #ddd; border-radius: 10px;
-    box-shadow: 0 8px 28px rgba(0,0,0,.18);
+    width: 300px; box-sizing: border-box; padding: 18px;
+    font: 400 14px/1.5 '${FONT_FAMILY}', system-ui, 'Malgun Gothic', sans-serif;
+    color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(30, 45, 80, .06), 0 18px 48px rgba(30, 45, 80, .16);
+    animation: pop .18s ease-out;
   }
-  .head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  h1 { font-size: 15px; margin: 0; }
-  .close { all: unset; cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; color: #888; }
-  .close:hover { color: #222; }
-  .field { display: block; margin-bottom: 10px; }
-  .field span { display: block; margin-bottom: 4px; }
-  .field small { color: #888; }
+  @media (prefers-color-scheme: dark) {
+    .panel {
+      --bg: #1b1e25; --card: #232731; --line: #343a47; --text: #e9edf4; --muted: #98a1b0;
+      --accent-soft: #24304a; --error: #f0738a; --error-soft: #3b2529; --ok: #6cc9a1; --ok-soft: #233630;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .5);
+    }
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+  * { box-sizing: border-box; font-family: inherit; }
+
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .logo {
+    flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+    font-size: 13px; font-weight: 700;
+  }
+  .titles { flex: 1; min-width: 0; }
+  h1 { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .site { margin: 0; font-size: 12px; color: var(--muted); }
+  .close {
+    all: unset; flex: none; display: grid; place-items: center; width: 28px; height: 28px;
+    border-radius: 9px; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1;
+  }
+  .close:hover { background: var(--accent-soft); color: var(--text); }
+
+  .group { margin: 0 0 12px; padding: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  .group-title { margin: 0 0 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+
+  .field { display: block; }
+  .field + .field { margin-top: 10px; }
+  .field span { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 5px; font-weight: 500; }
+  .field small { font-size: 11px; font-weight: 400; color: var(--muted); }
   .field input {
-    width: 100%; box-sizing: border-box; padding: 6px 8px;
-    border: 1px solid #ccc; border-radius: 6px; font: inherit; color: inherit; background: #fff;
+    width: 100%; padding: 8px 11px; font-size: 14px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
   }
-  .check { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; cursor: pointer; }
+  .field input::placeholder { color: var(--muted); opacity: .7; }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  .toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; cursor: pointer; }
+  .toggle + .toggle { border-top: 1px dashed var(--line); }
+  .toggle code { font-family: inherit; font-size: 12px; padding: 0 4px; border-radius: 5px; background: var(--accent-soft); }
+  .toggle input {
+    appearance: none; flex: none; position: relative; width: 36px; height: 21px; margin: 0;
+    border-radius: 999px; background: var(--line); cursor: pointer; transition: background .18s;
+  }
+  .toggle input::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); transition: transform .18s;
+  }
+  .toggle input:checked { background: var(--accent); }
+  .toggle input:checked::after { transform: translateX(15px); }
+  .toggle input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   .go {
-    all: unset; display: block; box-sizing: border-box; width: 100%; margin-top: 10px; padding: 9px;
-    text-align: center; border-radius: 6px; background: #3b5bdb; color: #fff; font-weight: 600; cursor: pointer;
+    all: unset; display: block; box-sizing: border-box; width: 100%; padding: 12px;
+    text-align: center; border-radius: 13px; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
+    font-size: 15px; font-weight: 600; box-shadow: 0 6px 16px rgba(59, 111, 240, .32);
+    transition: transform .12s, box-shadow .12s, filter .12s;
   }
-  .go[disabled] { background: #999; cursor: default; }
-  .status { min-height: 1.5em; margin: 10px 0 0; white-space: pre-wrap; }
-  .status.error { color: #c92a2a; }
+  .go:hover { filter: brightness(1.04); box-shadow: 0 8px 20px rgba(59, 111, 240, .4); }
+  .go:active { transform: translateY(1px); }
+  .go:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .go[disabled] { background: var(--line); color: var(--muted); box-shadow: none; cursor: default; filter: none; }
+
+  .status {
+    margin: 12px 0 0; padding: 10px 12px; border-radius: 12px; font-size: 13px;
+    white-space: pre-wrap; word-break: break-all; background: var(--accent-soft);
+  }
+  .status:empty { display: none; }
+  .status.done { background: var(--ok-soft); color: var(--ok); }
+  .status.error { background: var(--error-soft); color: var(--error); }
 `;
 
 const PANEL_HTML = `
   <div class="panel">
     <div class="head">
-      <h1>대화 txt 추출</h1>
-      <button class="close" title="닫기">×</button>
+      <div class="logo">txt</div>
+      <div class="titles">
+        <h1>대화 txt 추출</h1>
+        <p class="site"></p>
+      </div>
+      <button class="close" title="닫기 (Esc)">×</button>
     </div>
-    <label class="field">
-      <span>내 이름 <small>(비우면 사이트 정보 또는 "나")</small></span>
-      <input data-opt="userName" type="text" placeholder="예: 아린">
-    </label>
-    <label class="field">
-      <span>캐릭터 이름 <small>(비우면 사이트의 캐릭터 이름)</small></span>
-      <input data-opt="charName" data-nosave type="text" placeholder="예: 레온">
-    </label>
-    <label class="check"><input data-opt="includeGreeting" type="checkbox" checked> 첫 인사말 포함</label>
-    <label class="check"><input data-opt="replacePlaceholders" type="checkbox" checked> {{user}} / {{char}}를 이름으로 바꾸기</label>
-    <label class="check"><input data-opt="includeComments" type="checkbox"> 주석(&lt;!-- --&gt;)도 포함하기</label>
-    <label class="check"><input data-opt="useSeparator" type="checkbox"> 메시지 사이에 구분선(-----) 넣기</label>
+    <div class="group">
+      <label class="field">
+        <span>내 이름 <small>비우면 사이트 정보 또는 "나"</small></span>
+        <input data-opt="userName" type="text" placeholder="예: 아린">
+      </label>
+      <label class="field">
+        <span>캐릭터 이름 <small>비우면 사이트의 캐릭터 이름</small></span>
+        <input data-opt="charName" data-nosave type="text" placeholder="예: 레온">
+      </label>
+    </div>
+    <div class="group">
+      <p class="group-title">옵션</p>
+      <label class="toggle"><span>첫 인사말 포함</span><input data-opt="includeGreeting" type="checkbox" checked></label>
+      <label class="toggle"><span><code>{{user}}</code> <code>{{char}}</code> 이름으로 바꾸기</span><input data-opt="replacePlaceholders" type="checkbox" checked></label>
+      <label class="toggle"><span>주석 <code>&lt;!-- --&gt;</code> 포함하기</span><input data-opt="includeComments" type="checkbox"></label>
+      <label class="toggle"><span>메시지 사이 구분선 <code>-----</code></span><input data-opt="useSeparator" type="checkbox"></label>
+    </div>
     <button class="go">이 대화방 추출하기</button>
     <p class="status"></p>
   </div>
@@ -110,6 +202,7 @@ function createPanel() {
   host.id = 'chat-extractor-panel';
   const root = host.attachShadow({ mode: 'open' });
   root.innerHTML = `<style>${PANEL_CSS}</style>${PANEL_HTML}`;
+  loadPanelFonts();
 
   const $ = (sel) => root.querySelector(sel);
   const optInputs = [...root.querySelectorAll('[data-opt]')];
@@ -117,10 +210,12 @@ function createPanel() {
   const savedInputs = optInputs.filter((el) => !('nosave' in el.dataset));
   const status = $('.status');
   const goBtn = $('.go');
+  $('.site').textContent = window.findChatAdapter(location)?.name || '지원하지 않는 사이트';
 
-  const setStatus = (text, isError = false) => {
+  // kind: '' (진행 중) | 'done' | 'error'
+  const setStatus = (text, kind = '') => {
     status.textContent = text;
-    status.className = isError ? 'status error' : 'status';
+    status.className = kind ? `status ${kind}` : 'status';
   };
 
   const readOptions = () =>
@@ -152,7 +247,7 @@ function createPanel() {
   goBtn.addEventListener('click', async () => {
     const adapter = window.findChatAdapter(location);
     if (!adapter) {
-      setStatus('이 페이지는 지원하지 않는 사이트입니다.', true);
+      setStatus('이 페이지는 지원하지 않는 사이트입니다.', 'error');
       return;
     }
     const opts = readOptions();
@@ -167,10 +262,10 @@ function createPanel() {
       const name = (options.charName || '').trim() || result.characterName || adapter.name;
       const filename = `${safeFilename(name)}_${date}.txt`;
       downloadText(formatTranscript(result, options), filename);
-      setStatus(`완료: 메시지 ${result.messages.length}개 → ${filename}${result.warning ? `
-${result.warning}` : ''}`);
+      const warning = result.warning ? `\n${result.warning}` : '';
+      setStatus(`완료: 메시지 ${result.messages.length}개 → ${filename}${warning}`, result.warning ? 'error' : 'done');
     } catch (e) {
-      setStatus(e.message || String(e), true);
+      setStatus(e.message || String(e), 'error');
     } finally {
       goBtn.disabled = false;
     }
