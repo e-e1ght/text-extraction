@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI 채팅 txt 추출기",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "AI 채팅 사이트의 대화 내역을 txt 파일로 저장합니다.",
   "permissions": ["storage", "scripting"],
   "host_permissions": [
@@ -13,7 +13,9 @@
     "https://*.teapotchat.com/*",
     "https://firestore.googleapis.com/*",
     "https://elyn.ai/*",
-    "https://*.elyn.ai/*"
+    "https://*.elyn.ai/*",
+    "https://crack.wrtn.ai/*",
+    "https://crack-api.wrtn.ai/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -23,8 +25,8 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://caveduck.io/*", "https://*.caveduck.io/*", "https://rofan.ai/*", "https://*.rofan.ai/*", "https://teapotchat.com/*", "https://*.teapotchat.com/*", "https://elyn.ai/*", "https://*.elyn.ai/*"],
-      "js": ["adapters/registry.js", "adapters/caveduck.js", "adapters/rofan.js", "adapters/teapot.js", "adapters/elyn.js", "content.js"],
+      "matches": ["https://caveduck.io/*", "https://*.caveduck.io/*", "https://rofan.ai/*", "https://*.rofan.ai/*", "https://teapotchat.com/*", "https://*.teapotchat.com/*", "https://elyn.ai/*", "https://*.elyn.ai/*", "https://crack.wrtn.ai/*"],
+      "js": ["adapters/registry.js", "adapters/caveduck.js", "adapters/rofan.js", "adapters/teapot.js", "adapters/elyn.js", "adapters/crack.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

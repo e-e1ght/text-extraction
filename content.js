@@ -101,8 +101,10 @@ const PANEL_CSS = `
   .logo {
     flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff;
-    font-size: 13px; font-weight: 700;
+    font-size: 13px; font-weight: 700; overflow: hidden;
   }
+  .logo.has-icon { background: #fff; border: 1px solid var(--line); }
+  .logo img { width: 22px; height: 22px; object-fit: contain; }
   .titles { flex: 1; min-width: 0; }
   h1 { margin: 0; font-size: 17px; font-weight: 700; line-height: 1.3; }
   .site { margin: 0; font-size: 12px; color: var(--muted); }
@@ -195,6 +197,32 @@ const PANEL_HTML = `
   </div>
 `;
 
+// 헤더 로고 자리에 지금 사이트의 아이콘(파비콘)을 띄운다. 못 불러오면 "txt" 그대로 둔다.
+function siteIconUrls() {
+  const links = [...document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]')]
+    .map((l) => ({ href: l.href, size: parseInt((l.getAttribute('sizes') || '').split('x')[0], 10) || 0, svg: /svg/.test(l.type) }))
+    .filter((l) => l.href);
+  // 선명하게 보이도록 svg → 큰 크기 순으로 고르고, 마지막에 /favicon.ico
+  links.sort((a, b) => b.svg - a.svg || b.size - a.size);
+  return [...new Set([...links.map((l) => l.href), `${location.origin}/favicon.ico`])];
+}
+
+function showSiteIcon(logo) {
+  const urls = siteIconUrls();
+  const img = document.createElement('img');
+  img.alt = '';
+  let i = 0;
+  img.onload = () => {
+    logo.textContent = '';
+    logo.classList.add('has-icon');
+    logo.appendChild(img);
+  };
+  img.onerror = () => {
+    if (++i < urls.length) img.src = urls[i];
+  };
+  img.src = urls[0];
+}
+
 let panelHost = null;
 
 function createPanel() {
@@ -211,6 +239,7 @@ function createPanel() {
   const status = $('.status');
   const goBtn = $('.go');
   $('.site').textContent = window.findChatAdapter(location)?.name || '지원하지 않는 사이트';
+  showSiteIcon($('.logo'));
 
   // kind: '' (진행 중) | 'done' | 'error'
   const setStatus = (text, kind = '') => {
