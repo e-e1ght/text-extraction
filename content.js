@@ -163,6 +163,19 @@ const PANEL_CSS = `
   .status:empty { display: none; }
   .status.done { background: var(--ok-soft); color: var(--ok); }
   .status.error { background: var(--error-soft); color: var(--error); }
+
+  .update {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    margin: -4px 0 12px; padding: 9px 12px; border-radius: 12px; font-size: 13px;
+    background: var(--accent-soft); color: var(--text);
+  }
+  .update[hidden] { display: none; }
+  .update b { color: var(--accent); font-weight: 600; }
+  .update a {
+    flex: none; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: #fff; background: var(--accent); text-decoration: none;
+  }
+  .update a:hover { filter: brightness(1.06); }
 `;
 
 const PANEL_HTML = `
@@ -174,6 +187,10 @@ const PANEL_HTML = `
         <p class="site"></p>
       </div>
       <button class="close" title="닫기 (Esc)">×</button>
+    </div>
+    <div class="update" hidden>
+      <span>새 버전 <b class="update-ver"></b>이 나왔어요</span>
+      <a class="update-link" target="_blank" rel="noopener">GitHub 열기</a>
     </div>
     <div class="group">
       <label class="field">
@@ -240,6 +257,17 @@ function createPanel() {
   const goBtn = $('.go');
   $('.site').textContent = window.findChatAdapter(location)?.name || '지원하지 않는 사이트';
   showSiteIcon($('.logo'));
+
+  // GitHub 에 새 버전이 올라왔으면 안내와 링크를 띄운다
+  chrome.runtime
+    .sendMessage({ type: 'check-update' })
+    .then((info) => {
+      if (!info?.hasUpdate) return;
+      $('.update-ver').textContent = `v${info.latest}`;
+      $('.update-link').href = info.url;
+      $('.update').hidden = false;
+    })
+    .catch(() => {});
 
   // kind: '' (진행 중) | 'done' | 'error'
   const setStatus = (text, kind = '') => {
