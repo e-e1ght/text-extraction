@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI 채팅 txt 추출기",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "AI 채팅 사이트의 대화 내역을 txt 파일로 저장합니다.",
   "permissions": ["storage", "scripting", "alarms"],
   "host_permissions": [

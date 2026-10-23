@@ -195,11 +195,11 @@ const PANEL_HTML = `
     <div class="group">
       <label class="field">
         <span>내 이름 <small>비우면 사이트 정보 또는 "나"</small></span>
-        <input data-opt="userName" type="text" placeholder="예: 아린">
+        <input data-opt="userName" type="text" placeholder="유저 이름">
       </label>
       <label class="field">
         <span>캐릭터 이름 <small>비우면 사이트의 캐릭터 이름</small></span>
-        <input data-opt="charName" data-nosave type="text" placeholder="예: 레온">
+        <input data-opt="charName" data-nosave type="text" placeholder="캐릭터 이름">
       </label>
     </div>
     <div class="group">
