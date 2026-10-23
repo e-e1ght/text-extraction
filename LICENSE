@@ -1,23 +1,14 @@
-Copyright (c) 2026 e-e1ght. All rights reserved.
+AI 채팅 txt 추출기
+원본: https://github.com/e-e1ght/text-extraction
 
-이 소프트웨어(AI 채팅 txt 추출기)는 개인적·비상업적 용도로만 사용할 수 있습니다.
+- 개인적으로 사용할 때는 자유롭게 사용하고 수정할 수 있습니다.
+- 수정한 버전을 포함해 다른 곳에 다시 배포할 때는 위 원본 GitHub 링크를 함께 적어야 합니다.
 
-허용되는 것
-- 개인이 자신의 기기에 설치해 사용하는 것
-- 개인 사용을 위해 자신의 기기 안에서 코드를 수정하는 것
-
-허용되지 않는 것 (저작권자의 사전 허락 없이)
-- 이 소프트웨어 또는 수정한 버전을 다른 곳에 다시 배포·업로드·공유하는 것
-- 판매하거나 유료 서비스·상업적 목적에 사용하는 것
-- 저작권 표시를 지우거나 자신이 만든 것처럼 게시하는 것
-
-이 소프트웨어는 "있는 그대로" 제공되며, 어떠한 보증도 하지 않습니다.
-사용으로 생긴 문제(데이터 손실, 계정 제재, 각 사이트의 정책 위반 등)에 대한 책임은 사용자에게 있습니다.
-각 AI 채팅 사이트와는 관련이 없는 비공식 도구입니다.
+이 도구는 있는 그대로 제공되며, 사용에 따른 책임은 사용자에게 있습니다.
 
 ---
 
-This software is licensed for personal, non-commercial use only.
-Redistribution, re-uploading, sale, or commercial use of this software or any
-modified version is not permitted without prior written permission from the
-copyright holder. The software is provided "as is", without warranty of any kind.
+Free to use and modify for personal use.
+If you redistribute this software (modified or not), include a link to the original:
+https://github.com/e-e1ght/text-extraction
+Provided "as is", without warranty of any kind.
