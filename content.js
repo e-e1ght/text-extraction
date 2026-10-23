@@ -3,24 +3,31 @@
 
 function formatTranscript(result, options) {
   const userName = (options.userName || '').trim() || result.userName || '나';
-  const charName = result.characterName || '캐릭터';
+  const charOverride = (options.charName || '').trim();
+  const charName = charOverride || result.characterName || '캐릭터';
 
   const replacePlaceholders = (text) =>
     options.replacePlaceholders
       ? text.replace(/\{\{\s*user\s*\}\}/gi, userName).replace(/\{\{\s*char\s*\}\}/gi, charName)
       : text;
 
+  // 사이트 화면에 보이지 않는 HTML 주석(<!-- ... -->)
+  const stripComments = (text) => (options.includeComments ? text : text.replace(/<!--[\s\S]*?-->/g, ''));
+
   const lines = [];
-  lines.push(`# ${result.title || charName}`);
+  lines.push(`# ${charOverride ? `${charOverride} 대화 기록` : result.title || charName}`);
   lines.push(`# 추출일: ${new Date().toLocaleString('ko-KR')}`);
-  lines.push(`# 메시지 수: ${result.messages.length}`);
+  const shown = result.messages
+    .filter((msg) => !msg.greeting || options.includeGreeting)
+    .map((msg) => ({ ...msg, text: stripComments(msg.text).trim() }))
+    .filter((msg) => msg.text); // 주석만 있던 메시지는 뺀다
+  lines.push(`# 메시지 수: ${shown.length}`);
   lines.push('');
 
-  for (const msg of result.messages) {
-    if (msg.greeting && !options.includeGreeting) continue;
-    const name = msg.role === 'user' ? userName : msg.name || charName;
+  for (const msg of shown) {
+    const name = msg.role === 'user' ? userName : charOverride || msg.name || charName;
     lines.push(`[${name}]`);
-    lines.push(replacePlaceholders(msg.text.trim()));
+    lines.push(replacePlaceholders(msg.text));
     lines.push('');
     if (options.separator) lines.push(options.separator, '');
   }
@@ -83,8 +90,13 @@ const PANEL_HTML = `
       <span>내 이름 <small>(비우면 사이트 정보 또는 "나")</small></span>
       <input data-opt="userName" type="text" placeholder="예: 아린">
     </label>
+    <label class="field">
+      <span>캐릭터 이름 <small>(비우면 사이트의 캐릭터 이름)</small></span>
+      <input data-opt="charName" data-nosave type="text" placeholder="예: 레온">
+    </label>
     <label class="check"><input data-opt="includeGreeting" type="checkbox" checked> 첫 인사말 포함</label>
     <label class="check"><input data-opt="replacePlaceholders" type="checkbox" checked> {{user}} / {{char}}를 이름으로 바꾸기</label>
+    <label class="check"><input data-opt="includeComments" type="checkbox"> 주석(&lt;!-- --&gt;)도 포함하기</label>
     <label class="check"><input data-opt="useSeparator" type="checkbox"> 메시지 사이에 구분선(-----) 넣기</label>
     <button class="go">이 대화방 추출하기</button>
     <p class="status"></p>
@@ -101,6 +113,8 @@ function createPanel() {
 
   const $ = (sel) => root.querySelector(sel);
   const optInputs = [...root.querySelectorAll('[data-opt]')];
+  // 캐릭터 이름은 대화방마다 다르므로 저장하지 않는다
+  const savedInputs = optInputs.filter((el) => !('nosave' in el.dataset));
   const status = $('.status');
   const goBtn = $('.go');
 
@@ -120,15 +134,18 @@ function createPanel() {
     });
   }
 
-  chrome.storage.local.get(optInputs.map((el) => el.dataset.opt)).then((saved) => {
-    for (const el of optInputs) {
+  const readSaved = () =>
+    Object.fromEntries(savedInputs.map((el) => [el.dataset.opt, el.type === 'checkbox' ? el.checked : el.value]));
+
+  chrome.storage.local.get(savedInputs.map((el) => el.dataset.opt)).then((saved) => {
+    for (const el of savedInputs) {
       const v = saved[el.dataset.opt];
       if (v === undefined) continue;
       if (el.type === 'checkbox') el.checked = v;
       else el.value = v;
     }
   });
-  for (const el of optInputs) el.addEventListener('change', () => chrome.storage.local.set(readOptions()));
+  for (const el of savedInputs) el.addEventListener('change', () => chrome.storage.local.set(readSaved()));
 
   $('.close').addEventListener('click', closePanel);
 
@@ -147,9 +164,11 @@ function createPanel() {
       const result = await adapter.extract({ onProgress: (t) => setStatus(t) });
       if (!result.messages.length) throw new Error('추출할 메시지가 없습니다.');
       const date = new Date().toISOString().slice(0, 10);
-      const filename = `${safeFilename(result.characterName || adapter.name)}_${date}.txt`;
+      const name = (options.charName || '').trim() || result.characterName || adapter.name;
+      const filename = `${safeFilename(name)}_${date}.txt`;
       downloadText(formatTranscript(result, options), filename);
-      setStatus(`완료: 메시지 ${result.messages.length}개 → ${filename}`);
+      setStatus(`완료: 메시지 ${result.messages.length}개 → ${filename}${result.warning ? `
+${result.warning}` : ''}`);
     } catch (e) {
       setStatus(e.message || String(e), true);
     } finally {
