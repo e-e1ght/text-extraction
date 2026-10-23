@@ -9,6 +9,7 @@ AI 채팅 사이트의 대화 내역을 txt 파일로 저장하는 크롬 확장
 - 티팟 (teapotchat.com)
 - 엘린 (elyn.ai)
 - 크랙 (crack.wrtn.ai)
+- 유니챗 (univers.chat)
 
 ## 설치
 
