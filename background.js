@@ -1,5 +1,5 @@
 // 확장 아이콘 클릭 → 현재 탭에 추출 패널을 열고 닫는다.
-const CONTENT_FILES = ['adapters/registry.js', 'adapters/caveduck.js', 'adapters/rofan.js', 'adapters/teapot.js', 'content.js'];
+const CONTENT_FILES = ['adapters/registry.js', 'adapters/caveduck.js', 'adapters/rofan.js', 'adapters/teapot.js', 'adapters/elyn.js', 'content.js'];
 
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id) return;

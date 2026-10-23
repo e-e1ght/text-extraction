@@ -104,20 +104,12 @@
     return all.map((d) => decodeFields(d.fields));
   }
 
-  // 본문 속 이미지 표시({{img::주소}})는 txt 에서 뺀다. 이미지만 있던 줄은 줄째 지운다.
-  const stripImages = (text) =>
-    (text || '')
-      .replace(/^[ \t]*\{\{img::[^}]*\}\}[ \t]*(\r?\n|$)/gm, '')
-      .replace(/\{\{img::[^}]*\}\}/g, '')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
   // 화면에 선택된 답변 (재생성한 답변이 여러 개면 response_idx 번째)
   function responseText(msg) {
     const list = Array.isArray(msg.llm_response) ? msg.llm_response : [];
     const picked = list[msg.response_idx ?? 0] || list[0];
     const r = picked?.response;
-    return stripImages(Array.isArray(r) ? r.join('') : r);
+    return util.stripImageTags(Array.isArray(r) ? r.join('') : r);
   }
 
   window.registerChatAdapter({
@@ -136,10 +128,10 @@
       const rows = await fetchAllMessages(auth, chatPath, onProgress);
 
       const messages = [];
-      const greeting = stripImages(chat.start_setting?.start_message);
+      const greeting = util.stripImageTags(chat.start_setting?.start_message);
       if (greeting) messages.push({ role: 'char', text: greeting, greeting: true });
       for (const msg of rows) {
-        const q = stripImages(msg.user_chat);
+        const q = util.stripImageTags(msg.user_chat);
         if (q) messages.push({ role: 'user', text: q });
         const a = responseText(msg);
         if (a) messages.push({ role: 'char', text: a });

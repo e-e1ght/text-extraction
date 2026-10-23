@@ -24,6 +24,15 @@ window.chatExtractorUtil = {
     return new Promise((r) => setTimeout(r, ms));
   },
 
+  // 본문 속 이미지 표시({{img::주소 또는 이름}})는 txt 에서 뺀다. 이미지만 있던 줄은 줄째 지운다.
+  stripImageTags(text) {
+    return (text || '')
+      .replace(/^[ \t]*\{\{img::[^}]*\}\}[ \t]*(\r?\n|$)/gm, '')
+      .replace(/\{\{img::[^}]*\}\}/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  },
+
   // 429(요청 제한) 응답이면 잠시 기다렸다가 다시 시도
   async fetchJson(url, init = {}, retries = 4) {
     for (let attempt = 0; ; attempt++) {
